@@ -1,0 +1,33 @@
+- name: Update Sonarqube
+  hosts: internal_sonarqube
+  remote_user: clayton
+  become: yes
+
+  vars_prompt:
+    - name: db_password
+      prompt: "Enter db password"
+      private: no
+    - name: gitlab_username
+      prompt: "Enter Gitlab Container Registry username"
+      private: no
+    - name: gitlab_password
+      prompt: "Enter Gitlab Container Registry password"
+      private: yes
+
+  vars:
+    path: /sonarqube
+    sonarqube_version: latest
+    sonarqube_cert: cert.com
+    nginx_version: 1.17.2
+    database_type: postgres
+    database_version: 12.1
+    db_name: sonarqube
+    postgres_username: sonar
+    postgres_password: "{{db_password}}"
+    gitlab_username: "{{gitlab_username}}"
+    gitlab_password: "{{gitlab_password}}"
+
+  roles:
+    - common
+    - sonarqube
+    # - sonarqube_branch_plugin

@@ -1,0 +1,26 @@
+server {
+	listen 80 default_server;
+	listen [::]:80 default_server;
+	server_name _;
+	return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name  {{ inventory_hostname }};
+    client_max_body_size 256M;
+
+    ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+    ssl_ciphers  ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP;
+    ssl_prefer_server_ciphers   on;
+    ssl_certificate /etc/pki/tls/certs/{{ inventory_hostname }}.pem;
+    ssl_certificate_key /etc/pki/tls/private/{{ inventory_hostname }}.key;
+
+    location / {
+        proxy_pass http://localhost:9000;
+    }
+
+    location /health {
+        proxy_pass http://localhost:8080;
+    }
+}

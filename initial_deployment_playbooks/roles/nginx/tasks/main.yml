@@ -1,0 +1,49 @@
+- name: Create directories
+  file:
+    path: "{{ path }}/{{ item }}"
+    state: directory
+    owner: sonarqube
+    group: "0"
+    recurse: yes
+    mode: g+rwx
+  with_items:
+    - nginx/config
+    - nginx/certs
+    - nginx/logs
+
+- name: Copy nginx conf to remote
+  template:
+    src: default.conf.j2
+    dest: "{{path}}/nginx/config/default.conf"
+    group: '0'
+
+- name: Copy nginx conf to remote
+  copy:
+    src: "{{inventory_hostname}}.p12"
+    dest: "{{path}}/nginx/certs/{{inventory_hostname}}.p12"
+    group: '0'
+
+- name: Copy pem to remote
+  copy:
+    src: "{{inventory_hostname}}.pem"
+    dest: "{{path}}/nginx/certs/{{inventory_hostname}}.pem"
+    group: '0'
+- name: Copy key to remote
+  copy:
+    src: "{{inventory_hostname}}.key"
+    dest: "{{path}}/nginx/certs/{{inventory_hostname}}.key"
+    group: '0'
+
+- name: Deploy nginx
+  docker_container:
+    name: nginx
+    image: "{{ nginx_image }}"
+    user: root
+    restart_policy: always
+    networks_cli_compatible: yes
+    network_mode: host
+    volumes:
+      - "{{path}}/nginx/config/default.conf:/etc/nginx/conf.d/default.conf:ro"
+      - "{{path}}/nginx/logs:/var/logs/nginx"
+      - "{{path}}/nginx/certs/{{inventory_hostname}}.pem:/etc/pki/tls/certs/{{inventory_hostname}}.pem:ro"
+      - "{{path}}/nginx/certs/{{inventory_hostname}}.key:/etc/pki/tls/private/{{inventory_hostname}}.key:ro"

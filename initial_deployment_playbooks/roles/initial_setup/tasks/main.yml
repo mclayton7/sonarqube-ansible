@@ -1,0 +1,18 @@
+- name: Create sonarqube group
+  group:
+    name: sonarqube
+    state: present
+
+- name: Create sonarqube user
+  user:
+    name: sonarqube
+    state: present
+    group: sonarqube
+
+- name: Create sonarqube directory
+  file:
+    path: "{{ path }}"
+    state: directory
+    owner: sonarqube
+    group: sonarqube
+    mode: "g+rw"

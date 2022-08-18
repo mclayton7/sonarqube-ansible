@@ -1,0 +1,47 @@
+- name: Create conf volume
+  docker_volume:
+    name: "sonarqube_conf"
+
+- name: Create data volume
+  docker_volume:
+    name: "sonarqube_data"
+
+- name: Create extension volume
+  docker_volume:
+    name: "sonarqube_extensions"
+
+- name: Create logs volume
+  docker_volume:
+    name: "sonarqube_logs"
+
+- name: Copy over sonar.properties
+  template:
+    src: sonar.properties.j2
+    dest: "/var/lib/docker/volumes/sonarqube_conf/_data/sonar.properties"
+
+- name: Log into private registry and force re-authorization
+  docker_login:
+    registry: dockerregistry.com:5005
+    username: "{{gitlab_username}}"
+    password: "{{gitlab_password}}"
+    reauthorize: yes
+
+- name: Deploy sonarqube
+  docker_container:
+    name: sonarqube
+    groups:
+      - "sonarqube"
+    image: "{{ sonarqube_image }}"
+    pull: true
+    restart_policy: always
+    networks_cli_compatible: yes
+    user: sonarqube
+    networks:
+      - name: sonarqube_net
+    published_ports:
+      - 9000:9000/tcp
+    volumes:
+      - "sonarqube_conf:/opt/sonarqube/conf"
+      - "sonarqube_data:/opt/sonarqube/data"
+      - "sonarqube_extensions:/opt/sonarqube/extensions"
+      - "sonarqube_logs:/opt/sonarqube/logs"

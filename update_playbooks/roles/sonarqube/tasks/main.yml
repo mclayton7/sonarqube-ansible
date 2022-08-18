@@ -1,0 +1,80 @@
+- name: Remove the existing container
+  docker_container:
+    name: sonarqube
+    state: absent
+
+# Remove all existing volumes
+- name: Remove data volume
+  docker_volume:
+    name: "sonarqube_data"
+    state: absent
+
+- name: Remove extension volume
+  docker_volume:
+    name: "sonarqube_extensions"
+    state: absent
+
+- name: Remove logs volume
+  docker_volume:
+    name: "sonarqube_logs"
+    state: absent
+
+- name: Remove sonarqube/lib/common volume
+  docker_volume:
+    name: "sonarqube_libcommon"
+    state: absent
+
+- name: Remove sq/lib/common volume
+  docker_volume:
+    name: "sonarqube_sqlibcommon"
+    state: absent
+
+# Recreate volumes
+- name: Create data volume
+  docker_volume:
+    name: "sonarqube_data"
+
+- name: Create extension volume
+  docker_volume:
+    name: "sonarqube_extensions"
+
+- name: Create logs volume
+  docker_volume:
+    name: "sonarqube_logs"
+
+- name: Create sonarqube/lib/common volume
+  docker_volume:
+    name: "sonarqube_libcommon"
+
+- name: Create sq/lib/common volume
+  docker_volume:
+    name: "sonarqube_sqlibcommon"
+
+- name: Log into private registry and force re-authorization
+  docker_login:
+    registry: dockerregistry.com:5005
+    username: "{{gitlab_username}}"
+    password: "{{gitlab_password}}"
+    reauthorize: yes
+
+- name: Deploy sonarqube
+  docker_container:
+    name: sonarqube
+    groups:
+      - "sonarqube"
+    image: "{{ sonarqube_image }}"
+    pull: true
+    restart_policy: always
+    networks_cli_compatible: yes
+    user: sonarqube
+    networks:
+      - name: sonarqube_net
+    published_ports:
+      - 9000:9000/tcp
+    volumes:
+      - "sonarqube_conf:/opt/sonarqube/conf"
+      - "sonarqube_data:/opt/sonarqube/data"
+      - "sonarqube_extensions:/opt/sonarqube/extensions"
+      - "sonarqube_logs:/opt/sonarqube/logs"
+      - "sonarqube_sqlibcommon:/opt/sq/lib/common"
+      - "sonarqube_libcommon:/opt/sonarqube/lib/common"

@@ -1,0 +1,5 @@
+FROM sonarqube:8.9.8-developer
+
+ADD rootcert.pem /tmp/rootcert.pem
+RUN keytool -import -v -trustcacerts -alias rootcert -file /tmp/rootcert.pem \
+    -keystore ${JAVA_HOME}/lib/security/cacerts -noprompt -storepass changeit

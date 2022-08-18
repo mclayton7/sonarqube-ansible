@@ -1,0 +1,28 @@
+- name: Create directories
+  file:
+    path: "{{ path }}/{{ item }}"
+    state: directory
+    owner: sonarqube
+    group: "0"
+    recurse: yes
+    mode: g+rwx
+  with_items:
+    - database/config
+    - database/data
+    - database/logs
+
+- name: Deploy postgres
+  docker_container:
+    name: postgres
+    image: "{{ postgres_image }}"
+    user: root
+    restart_policy: always
+    networks_cli_compatible: yes
+    networks:
+      - name: sonarqube_net
+    published_ports:
+      - 5433:5432/tcp
+    env:
+      POSTGRES_USER: "{{ postgres_username }}"
+      POSTGRES_PASSWORD: "{{ postgres_password }}"
+      POSTGRES_DB: "{{db_name}}"

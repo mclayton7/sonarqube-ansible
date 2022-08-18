@@ -1,0 +1,75 @@
+---
+- name: Enable EPEL repository
+  package:
+    name: epel-release
+    state: present
+
+- name: Upgrade all packages
+  package:
+    name: '*'
+    state: latest
+
+- name: Add Docker repo
+  command: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+  args:
+    creates: /etc/yum.repos.d/docker-ce.repo
+
+- name: Install Docker-ce
+  package:
+    name: docker-ce
+    state: present
+
+- name: Start/enable Docker service
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Install packages
+  yum:
+    name: 
+      - wget
+      - git
+      - ntp
+      - net-tools
+      - tcpdump
+      - htop
+      - open-vm-tools
+      - python-pip
+      - python-docker-py
+      - byobu
+      - lvm*
+    state: present
+
+- name: Start/enable NTP service
+  service:
+    name: ntpd
+    state: started
+    enabled: yes
+
+- name: Install cryptography Python module (pyOpenSSL)
+  pip:
+    name: pyOpenSSL
+
+- name: Configure kernel memory allowance
+  lineinfile:
+    dest: /etc/sysctl.conf
+    regexp: ^vm\.max_map_count
+    line: vm.max_map_count=262144
+  register: max_map_count
+
+- name: Reload kernel settings
+  command: sysctl --system
+  when: max_map_count.changed
+
+- name: Passwordless Sudo
+  lineinfile:
+    path: /etc/sudoers
+    state: present
+    regexp: '%wheel ALL=(ALL) NOPASSWD: ALL$'
+    line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+    validate: /usr/sbin/visudo -cf %s
+
+- name: Create a sonarqube network
+  docker_network:
+    name: sonarqube_net

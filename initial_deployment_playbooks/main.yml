@@ -1,0 +1,38 @@
+- name: Deploy SonarQube with your choice of database
+  hosts: sonarqube
+  become: yes
+
+  vars_prompt:
+    - name: pkcs_password
+      prompt: "Enter pkcs password"
+      private: yes
+    - name: db_password
+      prompt: "Enter db password"
+      private: yes
+    - name: gitlab_username
+      prompt: "Enter Gitlab Container Registry username"
+      private: no
+    - name: gitlab_password
+      prompt: "Enter Gitlab Container Registry password"
+      private: yes
+
+  vars:
+    path: /sonarqube
+    database_type: postgres
+    db_name: sonarqube
+    postgres_username: sonar
+    postgres_password: "{{db_password}}"
+    gitlab_username: "{{gitlab_username}}"
+    gitlab_password: "{{gitlab_password}}"
+    ldap_url: ldap://example.com:389
+    ldap_base_dn: dc=in,dc=domain_name,dc=com
+
+  roles:
+    - initial_setup
+    - common
+    - firewall
+    - nginx
+    - database
+    - sonarqube
+    # - sonarqube_branch_plugin
+    - db_backup

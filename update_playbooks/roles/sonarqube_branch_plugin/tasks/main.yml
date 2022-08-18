@@ -1,0 +1,44 @@
+- name: Stop the sonarqube container
+  docker_container:
+    name: sonarqube
+    state: stopped
+
+# Use plugin for sonarqube 8.2
+# https://github.com/mc1arke/sonarqube-community-branch-plugin/issues/112#issuecomment-605329811
+- name: Download branch plugin
+  get_url:
+    url: https://github.com/mc1arke/sonarqube-community-branch-plugin/files/4396080/sonarqube-community-branch-plugin-1.4.0-SNAPSHOT.jar.zip
+    dest: "{{path}}"
+    checksum: sha256:6cfa15127e41d142cfc40288a5a130712cd329ff233fac14307b2b588533fe2d
+    mode: '0755'
+
+- name: Extract branch plugin
+  unarchive:
+    src: "{{path}}/sonarqube-community-branch-plugin-1.4.0-SNAPSHOT.jar.zip"
+    dest: "{{path}}"
+    remote_src: yes
+
+# Locations
+# https://github.com/mc1arke/sonarqube-community-branch-plugin/issues/112#issuecomment-605488675
+- name: Copy branch plugin into lib/common
+  copy:
+    src: "{{path}}/sonarqube-community-branch-plugin-1.4.0-SNAPSHOT.jar"
+    dest: "/var/lib/docker/volumes/sonarqube_libcommon/_data/sonarqube-community-branch-plugin-1.4.0-SNAPSHOT.jar"
+    remote_src: yes
+
+- name: Copy branch plugin into extensions/plugins
+  copy:
+    src: "{{path}}/sonarqube-community-branch-plugin-1.4.0-SNAPSHOT.jar"
+    dest: "/var/lib/docker/volumes/sonarqube_extensions/_data/plugins/sonarqube-community-branch-plugin-1.4.0-SNAPSHOT.jar"
+    remote_src: yes
+
+- name: Copy branch plugin into /opt/sq/lib/common
+  copy:
+    src: "{{path}}/sonarqube-community-branch-plugin-1.4.0-SNAPSHOT.jar"
+    dest: "/var/lib/docker/volumes/sonarqube_sqlibcommon/_data/sonarqube-community-branch-plugin-1.4.0-SNAPSHOT.jar"
+    remote_src: yes
+
+- name: Restart the sonarqube container
+  docker_container:
+    name: sonarqube
+    state: started
